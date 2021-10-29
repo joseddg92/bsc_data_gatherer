@@ -1,0 +1,19 @@
+# Pycharm
+.idea/
+
+__pycache__/
+
+# environment
+env/
+
+# .exe compilation
+dist/
+build/
+*.spec
+
+# Compiled contracts
+*.sol
+!contract_templates/*.sol
+
+wallets.txt
+
