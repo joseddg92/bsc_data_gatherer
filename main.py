@@ -7,10 +7,8 @@ from web3_utils import get_w3
 def process_block(block_data: BlockData):
     for tx in block_data['transactions']:
         parsed_tx = ParsedTx(tx)
-        if parsed_tx.is_dex_tx():
-            print(f"Got DEX transaction in block {block_data['number']}: {parsed_tx}")
-    pass
-
+        if parsed_tx.is_simple_wbnb_tx():
+            print(parsed_tx)
 
 def main():
     w3 = get_w3()
