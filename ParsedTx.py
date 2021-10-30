@@ -35,9 +35,9 @@ def get_dex(tx_data: TxData) -> Optional[Dex]:
 class ParsedTx:
     w3 = get_w3()
 
-    def __init__(self, tx: Union[HexBytes, TxData]):
-        self.tx_data: TxData = self.w3.eth.get_transaction(tx) if isinstance(tx, HexBytes) else tx
-        self.tx_hash: HexBytes = self.tx_data['hash']
+    def __init__(self, tx: TxData):
+        self.tx_data = tx
+        self.tx_hash = self.tx_data['hash']
 
         self.dex = get_dex(self.tx_data)
 
