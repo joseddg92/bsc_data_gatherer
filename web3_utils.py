@@ -12,7 +12,7 @@ from eth_account.signers.local import LocalAccount
 from eth_typing import Address, ChecksumAddress
 from hexbytes import HexBytes
 from web3 import Web3
-from web3.contract import ContractFunction
+from web3.contract import ContractFunction, Contract
 from web3.exceptions import TransactionNotFound
 from web3.middleware import geth_poa_middleware
 from web3.types import Wei, TxParams
@@ -248,7 +248,7 @@ def decode_tx_input(web_provider, tx):
     return contract.decode_function_input(tx.input)
 
 
-def get_router_contract(w3, testnet=False):
+def get_router_contract(w3, testnet=False) -> Contract:
     router_addr = TESTNET_PANCAKE_SWAP_ROUTER if testnet else PANCAKE_SWAP_ROUTER
     return w3.eth.contract(address=router_addr, abi=PANCAKE_SWAP_ROUTER_ABI)
 
