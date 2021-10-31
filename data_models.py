@@ -82,15 +82,15 @@ class DexTradePair:
 
 @dataclass
 class DexTrade:
-    dex: DexTradePair
+    dex_pair: DexTradePair
     token_in: int
     token_out: int
     wbnb_in: int
     wbnb_out: int
 
 
-def get_DexTrade(swap_info, dex: DexTradePair) -> DexTrade:
-    if dex.is_token0_wbnb:
+def get_DexTrade(swap_info, dex_pair: DexTradePair) -> DexTrade:
+    if dex_pair.is_token0_wbnb:
         token_in = swap_info.args['amount1In']
         token_out = swap_info.args['amount1Out']
         wbnb_in = swap_info.args['amount0In']
@@ -102,7 +102,7 @@ def get_DexTrade(swap_info, dex: DexTradePair) -> DexTrade:
         wbnb_out = swap_info.args['amount1Out']
 
     return DexTrade(
-        dex,
+        dex_pair,
         token_in,
         token_out,
         wbnb_in,
