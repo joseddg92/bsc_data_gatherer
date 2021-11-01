@@ -17,14 +17,19 @@ class DecentralizedExchangeType:
     factory_addr: ChecksumAddress
 
 
-class DecentralizedExchange(DecentralizedExchangeType, Enum):
-    PANCAKESWAP = "pancakeswap", \
-                  Web3.toChecksumAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"), \
-                  Web3.toChecksumAddress("0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73")
+class DecentralizedExchange(Enum):
+    PANCAKESWAP = DecentralizedExchangeType(
+        dex_name="pancakeswap",
+        router_addr=Web3.toChecksumAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
+        factory_addr=Web3.toChecksumAddress("0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73")
+    )
 
-    APESWAP = "apeswap", \
-              Web3.toChecksumAddress("0xcF0feBd3f17CEf5b47b0cD257aCf6025c5BFf3b7"), \
-              Web3.toChecksumAddress("0x0841BD0B734E4F5853f0dD8d7Ea041c241fb0Da6")
+    APESWAP = DecentralizedExchangeType(
+        dex_name="apeswap",
+        router_addr=Web3.toChecksumAddress("0xcF0feBd3f17CEf5b47b0cD257aCf6025c5BFf3b7"),
+        factory_addr=Web3.toChecksumAddress("0x0841BD0B734E4F5853f0dD8d7Ea041c241fb0Da6")
+    )
+
 
 
 @dataclass

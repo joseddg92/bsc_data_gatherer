@@ -17,7 +17,7 @@ def main_events():
     last_block = w3.eth.get_block_number()
 
     for dex in DecentralizedExchange:
-        contract = get_contract(w3, dex.factory_addr)
+        contract = get_contract(w3, dex.value.factory_addr)
         new_pairs_filter = contract.events.PairCreated.createFilter(fromBlock=last_block-5000, toBlock=last_block)
         for pair_created in new_pairs_filter.get_all_entries():
             print(pair_created)
@@ -31,7 +31,9 @@ def main_events():
             token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
             token = get_token(token_addr)
 
-            pair = DexTradePair(dex, token, get_tx(pair_created.transactionHash), is_token0_wbnb)
+            pair = DexTradePair(
+               dex=dex.value, token=token, creator_tx=get_tx(pair_created.transactionHash), is_token0_wbnb=is_token0_wbnb
+            )
 
             swaps_filter = pair_contract.events.Swap.createFilter(fromBlock=last_block-5000, toBlock=last_block)
             for swap in swaps_filter.get_all_entries():
