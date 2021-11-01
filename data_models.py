@@ -177,10 +177,12 @@ class DexTrade:
     __mapper_args__ = {  # type: ignore
         "properties": {
             "dex_pair": relationship("DexTradePair"),
+            "tx": relationship("Tx"),
         }
     }
 
     dex_pair: DexTradePair
+    tx: Tx
     token_in: int
     token_out: int
     wbnb_in: int
@@ -201,6 +203,7 @@ def get_DexTrade(swap_info, dex_pair: DexTradePair) -> DexTrade:
 
     return DexTrade(
         dex_pair=dex_pair,
+        tx=get_tx(swap_info.transactionHash),
         token_in=token_in,
         token_out=token_out,
         wbnb_in=wbnb_in,
