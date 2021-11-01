@@ -105,6 +105,7 @@ class Tx:
         mapper_registry.metadata,
         Column("hash", String(), primary_key=True, nullable=False),
         Column("block_number", BigInteger(), ForeignKey("block.number"), nullable=False),
+        Column("transaction_index", Integer(), nullable=False),
         Column("gas_price", BigInteger(), nullable=False),
     )
 
@@ -116,6 +117,7 @@ class Tx:
 
     hash: Hash32
     block: Block
+    transaction_index: int
     gas_price: int
 
 
@@ -125,6 +127,7 @@ def get_tx(tx_hash: HexBytes) -> Tx:
     return Tx(
         hash=tx_hash,
         block=get_block(tx_data['blockNumber']),
+        transaction_index=tx_data['transactionIndex'],
         gas_price=tx_data['gasPrice']
     )
 
