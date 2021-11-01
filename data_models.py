@@ -4,14 +4,28 @@ from enum import Enum
 
 from eth_typing import ChecksumAddress, Hash32
 from hexbytes import HexBytes
+from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric
 from web3 import Web3
 from web3.types import TxData
 
 from web3_utils import get_erc20_contract, get_w3
 
+from sqlalchemy.orm import registry, relationship
+
+mapper_registry = registry()
+
 
 @dataclass
+@mapper_registry.mapped
 class DecentralizedExchangeType:
+    __table__ = Table(
+        "dex",
+        mapper_registry.metadata,
+        Column("dex_name", String(), primary_key=True),
+        Column("router_addr", String(), nullable=False),
+        Column("factory_addr", String(), nullable=False),
+    )
+
     dex_name: str
     router_addr: ChecksumAddress
     factory_addr: ChecksumAddress
@@ -31,9 +45,18 @@ class DecentralizedExchange(Enum):
     )
 
 
-
 @dataclass
+@mapper_registry.mapped
 class Token:
+    __table__ = Table(
+        "token",
+        mapper_registry.metadata,
+        Column("address", String(), primary_key=True),
+        Column("name", String(), nullable=False),
+        Column("symbol", String(), nullable=False),
+        Column("decimals", Integer(), nullable=False),
+    )
+
     address: ChecksumAddress
     name: str
     symbol: str
@@ -49,11 +72,18 @@ def get_token(token_addr: ChecksumAddress) -> Token:
     symbol = contract.functions.symbol().call()
     decimals = contract.functions.decimals().call()
 
-    return Token(token_addr, name, symbol, decimals)
+    return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
 
 
 @dataclass
+@mapper_registry.mapped
 class Block:
+    __table__ = Table(
+        "block",
+        mapper_registry.metadata,
+        Column("number", BigInteger(), primary_key=True),
+        Column("timestamp", DateTime(), nullable=False)
+    )
     number: int
     timestamp: datetime
 
@@ -61,11 +91,29 @@ class Block:
 def get_block(block_number: int) -> Block:
     block_data = get_w3().eth.get_block(block_number)
 
-    return Block(block_number, datetime.fromtimestamp(block_data['timestamp']))
+    return Block(
+        number=block_number,
+        timestamp=datetime.fromtimestamp(block_data['timestamp'])
+    )
 
 
 @dataclass
+@mapper_registry.mapped
 class Tx:
+    __table__ = Table(
+        "tx",
+        mapper_registry.metadata,
+        Column("hash", String(), primary_key=True, nullable=False),
+        Column("block_number", BigInteger(), ForeignKey("block.number"), nullable=False),
+        Column("gas_price", BigInteger(), nullable=False),
+    )
+
+    __mapper_args__ = {  # type: ignore
+        "properties": {
+            "block": relationship("Block")
+        }
+    }
+
     hash: Hash32
     block: Block
     gas_price: int
@@ -74,11 +122,34 @@ class Tx:
 def get_tx(tx_hash: HexBytes) -> Tx:
     tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
 
-    return Tx(tx_hash, get_block(tx_data['blockNumber']), tx_data['gasPrice'])
+    return Tx(
+        hash=tx_hash,
+        block=get_block(tx_data['blockNumber']),
+        gas_price=tx_data['gasPrice']
+    )
 
 
 @dataclass
+@mapper_registry.mapped
 class DexTradePair:
+    __table__ = Table(
+        "dex_trade_pair",
+        mapper_registry.metadata,
+        Column("id", BigInteger(), primary_key=True, autoincrement=True),
+        Column("dex_name", String(), ForeignKey("dex.dex_name"), nullable=False),
+        Column("token_address", String(), ForeignKey("token.address"), nullable=False),
+        Column("creator_tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
+        Column("is_token0_wbnb", Boolean(), nullable=False)
+    )
+
+    __mapper_args__ = {  # type: ignore
+        "properties": {
+            "dex": relationship("DecentralizedExchangeType"),
+            "token": relationship("Token"),
+            "creator_tx": relationship("Tx")
+        }
+    }
+
     dex: DecentralizedExchange
     token: Token
     creator_tx: Tx
@@ -86,7 +157,25 @@ class DexTradePair:
 
 
 @dataclass
+@mapper_registry.mapped
 class DexTrade:
+    __table__ = Table(
+        "dex_trade",
+        mapper_registry.metadata,
+        Column("id", BigInteger(), primary_key=True, autoincrement=True),
+        Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
+        Column("token_in", Numeric(precision=40, scale=0), nullable=False),
+        Column("token_out", Numeric(precision=40, scale=0), nullable=False),
+        Column("wbnb_in", Numeric(precision=40, scale=0), nullable=False),
+        Column("wbnb_out", Numeric(precision=40, scale=0), nullable=False),
+    )
+
+    __mapper_args__ = {  # type: ignore
+        "properties": {
+            "dex_pair": relationship("DexTradePair"),
+        }
+    }
+
     dex_pair: DexTradePair
     token_in: int
     token_out: int
@@ -107,9 +196,9 @@ def get_DexTrade(swap_info, dex_pair: DexTradePair) -> DexTrade:
         wbnb_out = swap_info.args['amount1Out']
 
     return DexTrade(
-        dex_pair,
-        token_in,
-        token_out,
-        wbnb_in,
-        wbnb_out
+        dex_pair=dex_pair,
+        token_in=token_in,
+        token_out=token_out,
+        wbnb_in=wbnb_in,
+        wbnb_out=wbnb_out
     )

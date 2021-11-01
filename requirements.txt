@@ -37,3 +37,6 @@ varint==1.0.2
 web3==5.24.0
 websockets==10.0
 yarl==1.7.0
+
+SQLAlchemy~=1.4.26
+psycopg2~=2.9.1
