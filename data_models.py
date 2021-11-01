@@ -164,10 +164,11 @@ class DexTrade:
         mapper_registry.metadata,
         Column("id", BigInteger(), primary_key=True, autoincrement=True),
         Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
-        Column("token_in", Numeric(precision=40, scale=0), nullable=False),
-        Column("token_out", Numeric(precision=40, scale=0), nullable=False),
-        Column("wbnb_in", Numeric(precision=40, scale=0), nullable=False),
-        Column("wbnb_out", Numeric(precision=40, scale=0), nullable=False),
+        Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
+        Column("token_in", Numeric(precision=78, scale=0), nullable=False),
+        Column("token_out", Numeric(precision=78, scale=0), nullable=False),
+        Column("wbnb_in", Numeric(precision=78, scale=0), nullable=False),
+        Column("wbnb_out", Numeric(precision=78, scale=0), nullable=False),
     )
 
     __mapper_args__ = {  # type: ignore
