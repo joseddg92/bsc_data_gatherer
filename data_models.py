@@ -15,7 +15,7 @@ from sqlalchemy.orm import registry, relationship
 mapper_registry = registry()
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class DecentralizedExchangeType:
     __table__ = Table(
@@ -45,7 +45,7 @@ class DecentralizedExchange(Enum):
     )
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class Token:
     __table__ = Table(
@@ -75,7 +75,7 @@ def get_token(token_addr: ChecksumAddress) -> Token:
     return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class Block:
     __table__ = Table(
@@ -97,7 +97,7 @@ def get_block(block_number: int) -> Block:
     )
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class Tx:
     __table__ = Table(
@@ -121,18 +121,19 @@ class Tx:
     gas_price: int
 
 
+
 def get_tx(tx_hash: HexBytes) -> Tx:
     tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
 
     return Tx(
-        hash=tx_hash,
+        hash=tx_hash.hex(),
         block=get_block(tx_data['blockNumber']),
         transaction_index=tx_data['transactionIndex'],
         gas_price=tx_data['gasPrice']
     )
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class DexTradePair:
     __table__ = Table(
@@ -159,7 +160,8 @@ class DexTradePair:
     is_token0_wbnb: bool
 
 
-@dataclass
+
+@dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class DexTrade:
     __table__ = Table(
