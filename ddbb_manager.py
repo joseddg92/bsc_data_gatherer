@@ -1,10 +1,10 @@
 import logging
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, desc
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, Session
 
-from data_models import mapper_registry
+from data_models import mapper_registry, Block
 
 
 class DDBBManager:
@@ -20,6 +20,14 @@ class DDBBManager:
 
     def __str__(self):
         return f"DDBBManager<{self.__engine}>"
+
+    def get_last_block(self) -> Block:
+        block_list = self.__session \
+            .query(Block) \
+            .order_by(desc(Block.number)) \
+            .limit(1).all()
+
+        return block_list[0] if block_list else None
 
     def persist(self, entity, commit=True) -> None:
         try:

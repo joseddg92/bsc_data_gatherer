@@ -26,11 +26,11 @@ BLOCK_LENGTH = 1000
 
 
 def main():
-    db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=True)
-
+    db_manager = DDBBManager(os.getenv("DDBB_STRING"))
     w3 = get_w3()
 
-    start_block = BLOCK_FOR_THE_FIRST_LP - 10
+    last_block = db_manager.get_last_block()
+    start_block = last_block.number if last_block else BLOCK_FOR_THE_FIRST_LP - 10
     dex_factories = {
         dex.value: get_contract(w3, dex.value.factory_addr) for dex in DecentralizedExchange
     }
