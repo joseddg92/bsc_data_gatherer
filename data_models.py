@@ -63,7 +63,7 @@ class Token:
     decimals: int
 
     def __str__(self):
-        return f"{self.name} ({self.symbol}"
+        return f"{self.name} ({self.symbol})"
 
 
 def get_token(token_addr: ChecksumAddress) -> Token:
