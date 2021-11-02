@@ -142,9 +142,9 @@ class DexTradePair:
     __table__ = Table(
         "dex_trade_pair",
         mapper_registry.metadata,
-        Column("id", BigInteger(), primary_key=True, autoincrement=True),
-        Column("dex_name", String(), ForeignKey("dex.dex_name"), nullable=False),
-        Column("token_address", String(), ForeignKey("token.address"), nullable=False),
+        Column("id", BigInteger(), unique=True, autoincrement=True),
+        Column("token_address", String(), ForeignKey("token.address"), primary_key=True),
+        Column("dex_name", String(), ForeignKey("dex.dex_name"), primary_key=True),
         Column("creator_tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
         Column("is_token0_wbnb", Boolean(), nullable=False)
     )
@@ -170,10 +170,10 @@ class DexTrade:
     __table__ = Table(
         "dex_trade",
         mapper_registry.metadata,
-        Column("id", BigInteger(), primary_key=True, autoincrement=True),
+        Column("id", BigInteger(), unique=True, autoincrement=True),
         Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
-        Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
-        Column("log_index", Integer(), nullable=False),
+        Column("tx_hash", String(), ForeignKey("tx.hash"), primary_key=True),
+        Column("log_index", Integer(), primary_key=True),
         Column("token_in", Numeric(precision=78, scale=0), nullable=False),
         Column("token_out", Numeric(precision=78, scale=0), nullable=False),
         Column("wbnb_in", Numeric(precision=78, scale=0), nullable=False),
