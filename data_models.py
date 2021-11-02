@@ -62,6 +62,9 @@ class Token:
     symbol: str
     decimals: int
 
+    def __str__(self):
+        return f"{self.name} ({self.symbol}"
+
 
 def get_token(token_addr: ChecksumAddress) -> Token:
     if isinstance(token_addr, str):
