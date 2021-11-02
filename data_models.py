@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from eth_typing import ChecksumAddress, Hash32
+from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric
 from web3 import Web3
@@ -106,7 +106,7 @@ class Tx:
     __table__ = Table(
         "tx",
         mapper_registry.metadata,
-        Column("hash", String(), primary_key=True, nullable=False),
+        Column("hash", String(), primary_key=True),
         Column("block_number", BigInteger(), ForeignKey("block.number"), nullable=False),
         Column("transaction_index", Integer(), nullable=False),
         Column("gas_price", BigInteger(), nullable=False),
@@ -118,7 +118,7 @@ class Tx:
         }
     }
 
-    hash: Hash32
+    hash: str
     block: Block
     transaction_index: int
     gas_price: int
