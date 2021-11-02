@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 from data_models import mapper_registry
 
@@ -13,7 +13,7 @@ class DDBBManager:
     def __init__(self, ddbb_string: str, prune_schema=False):
         self.ddbb_string = ddbb_string
         self.__engine = self.__create_ddbb_engine(ddbb_string, prune_schema=prune_schema)
-        self.__session = sessionmaker(bind=self.__engine)()
+        self.__session: Session = sessionmaker(bind=self.__engine)()
 
         if not self.__engine:
             raise ValueError("could not create DDBB engine")
@@ -23,7 +23,11 @@ class DDBBManager:
 
     def persist(self, entity, commit=True) -> None:
         try:
-            self.__session.add(entity)
+            if isinstance(entity, list):
+                for e in entity:
+                    self.__session.merge(e)
+            else:
+                self.__session.merge(entity)
             if commit:
                 self.__session.commit()
         except SQLAlchemyError:
