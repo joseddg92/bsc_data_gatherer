@@ -173,6 +173,7 @@ class DexTrade:
         Column("id", BigInteger(), primary_key=True, autoincrement=True),
         Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
         Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
+        Column("log_index", Integer(), nullable=False),
         Column("token_in", Numeric(precision=78, scale=0), nullable=False),
         Column("token_out", Numeric(precision=78, scale=0), nullable=False),
         Column("wbnb_in", Numeric(precision=78, scale=0), nullable=False),
@@ -188,6 +189,7 @@ class DexTrade:
 
     dex_pair: DexTradePair
     tx: Tx
+    log_index: int
     token_in: int
     token_out: int
     wbnb_in: int
@@ -209,6 +211,7 @@ def get_DexTrade(swap_info, dex_pair: DexTradePair) -> DexTrade:
     return DexTrade(
         dex_pair=dex_pair,
         tx=get_tx(swap_info.transactionHash),
+        log_index=swap_info.logIndex,
         token_in=token_in,
         token_out=token_out,
         wbnb_in=wbnb_in,
