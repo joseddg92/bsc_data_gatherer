@@ -34,8 +34,11 @@ def main():
     dex_factories = {
         dex.value: get_contract(w3, dex.value.factory_addr) for dex in DecentralizedExchange
     }
-    pairs = {}
     n_swaps = 0
+    pairs = {
+        pair: get_contract(w3, pair.pair_addr)
+        for pair in db_manager.get_all_pairs()
+    }
     start_time = time.time()
 
     block = start_block

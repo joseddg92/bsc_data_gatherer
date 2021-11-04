@@ -29,6 +29,9 @@ class DDBBManager:
 
         return block_list[0] if block_list else None
 
+    def get_all_pairs(self) -> List[DexTradePair]:
+        return self.__session.query(DexTradePair).all()
+
     def persist(self, entity, commit=True) -> None:
         try:
             if isinstance(entity, list):
