@@ -236,7 +236,7 @@ def get_nowbnb_token(token0, token1):
     return None
 
 
-def get_contract(w3, addr: AddressLike, abi=None):
+def get_contract(w3, addr: Union[str, AddressLike], abi=None):
     return w3.eth.contract(address=addr, abi=abi if abi else get_contract_abi(addr))
 
 
