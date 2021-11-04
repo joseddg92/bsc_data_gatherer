@@ -13,7 +13,7 @@ class DDBBManager:
     def __init__(self, ddbb_string: str, prune_schema=False):
         self.ddbb_string = ddbb_string
         self.__engine = self.__create_ddbb_engine(ddbb_string, prune_schema=prune_schema)
-        self.__session: Session = sessionmaker(bind=self.__engine)()
+        self.__session: Session = sessionmaker(bind=self.__engine, autocommit=True)()
 
         if not self.__engine:
             raise ValueError("could not create DDBB engine")
@@ -36,11 +36,8 @@ class DDBBManager:
                     self.__session.merge(e)
             else:
                 self.__session.merge(entity)
-            if commit:
-                self.__session.commit()
         except SQLAlchemyError:
             DDBBManager.logger.exception(f"Inserting {entity}")
-            self.__session.rollback()
 
     @staticmethod
     def __create_ddbb_engine(ddbb_string, prune_schema=False):

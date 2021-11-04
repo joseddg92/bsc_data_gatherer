@@ -110,7 +110,7 @@ def main():
             print(f"Persisting...")
             try:
                 start_persist_time = time.time()
-                db_manager.persist(entities_to_persist, commit=True)
+                db_manager.persist(entities_to_persist)
                 print(f" {len(entities_to_persist)} persisted in {time.time() - start_persist_time} seconds!")
             except (Exception,) as e:
                 print(f" Error persisting: {e}")
