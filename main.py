@@ -2,53 +2,47 @@ import itertools
 import os
 import time
 
-from data_models import DexTradePair, get_token, get_tx, get_DexTrade, DecentralizedExchange
+from data_models import DecentralizedExchange
 from ddbb_manager import DDBBManager
-from web3_utils import get_w3, get_contract, WBNB_ADDRESS
+from entity_factory import EntityFactory
+from web3_utils import get_w3, get_contract
 
-
-def create_pair_if_wbnb(dex, pair_created):
-    if WBNB_ADDRESS not in (pair_created.args.values()):
-        return None
-
-    is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
-    token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
-    token = get_token(token_addr)
-
-    return DexTradePair(
-        dex=dex, token=token, creator_tx=get_tx(pair_created.transactionHash),
-        is_token0_wbnb=is_token0_wbnb
-    )
 
 
 BLOCK_FOR_THE_FIRST_LP = 6810423
-BLOCK_LENGTH = 1000
+BLOCK_LENGTH = 5000
 
 
 def main():
     db_manager = DDBBManager(os.getenv("DDBB_STRING"))
+    e_factory = EntityFactory(db_manager)
     w3 = get_w3()
 
+    print("Reading last block...")
     last_block = db_manager.get_last_block()
     start_block = last_block.number if last_block else BLOCK_FOR_THE_FIRST_LP - 10
     dex_factories = {
         dex.value: get_contract(w3, dex.value.factory_addr) for dex in DecentralizedExchange
     }
-    n_swaps = 0
+    print("Reading pairs...")
     pairs = {
         pair: get_contract(w3, pair.pair_addr)
         for pair in db_manager.get_all_pairs()
     }
+    print("Done!")
     start_time = time.time()
+
+    print(f"Starting in block {start_block}, {len(pairs)} pairs so far.")
 
     block = start_block
     while True:
+        print(f"Import blocks {block}-{block + BLOCK_LENGTH}...")
         # Find new pairs
         entities_to_persist = []
         for dex, factory_contract in dex_factories.items():
             for retry in itertools.count():
                 try:
-                    print(f"Getting pairs for {dex.dex_name}, blocks {block}-{block + BLOCK_LENGTH}...", end="",
+                    print(f"\tGetting pairs for {dex.dex_name}...", end="",
                           flush=True)
                     new_pairs_filter = factory_contract.events.PairCreated.createFilter(
                         fromBlock=block - 1,
@@ -57,7 +51,7 @@ def main():
 
                     pairs_found = 0
                     for pair_created in new_pairs_filter.get_all_entries():
-                        pair = create_pair_if_wbnb(dex, pair_created)
+                        pair = e_factory.get_DexTradePair(dex, pair_created)
                         if not pair:
                             continue
 
@@ -72,7 +66,7 @@ def main():
                         print(f"ERROR (retry #{retry}): {e}")
 
         # Find new swaps for existing pairs
-        print("Looking for swaps...")
+        print("\tLooking for swaps...")
         for pair, pair_contract in pairs.items():
             for retry in itertools.count():
                 try:
@@ -84,12 +78,9 @@ def main():
                     # Iterate through .get_all_entries() fast, otherwise the Web3 provider will forget about our
                     # filter id, and we won't be able to finish to iterate the swap entries (exception will be raisen)
                     swaps = [swap for swap in swaps_filter.get_all_entries()]
-                    swaps = [get_DexTrade(swap, pair) for swap in swaps]
+                    swaps = [e_factory.get_DexTrade(swap, pair) for swap in swaps]
 
-                    n_swaps += len(swaps)
                     entities_to_persist.extend(swaps)
-                    if len(swaps) > 0:
-                        print(f"\t{pair.dex.dex_name} {pair.token}: got {len(swaps)} swaps.")
                     break
                 except (Exception, ) as e:
                     if retry > 1:
@@ -105,7 +96,7 @@ def main():
             f"Processed blocks {block}-{block + BLOCK_LENGTH} "
             f"({blocks_per_second:.2f} block/second, {remaining_seconds / 3600:.2f} hours remaining)")
         print(f"\tPairs: {len(pairs)}")
-        print(f"\tSwaps: {n_swaps}")
+        print(f"\tSwaps: {len(entities_to_persist)}")
         print(f"")
         block += BLOCK_LENGTH
 

@@ -1,10 +1,11 @@
 import logging
+from typing import List, Dict, Any
 
 from sqlalchemy import create_engine, text, desc
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, Session
 
-from data_models import mapper_registry, Block
+from data_models import mapper_registry, Block, DexTradePair
 
 
 class DDBBManager:
@@ -32,7 +33,10 @@ class DDBBManager:
     def get_all_pairs(self) -> List[DexTradePair]:
         return self.__session.query(DexTradePair).all()
 
-    def persist(self, entity, commit=True) -> None:
+    def get_entity_by_pl(self, cls, primary_key_value):
+        return self.__session.query(cls).get(primary_key_value)
+
+    def persist(self, entity) -> None:
         try:
             if isinstance(entity, list):
                 for e in entity:

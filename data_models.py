@@ -4,7 +4,7 @@ from enum import Enum
 
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
-from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric
+from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric, Sequence
 from web3 import Web3
 from web3.types import TxData
 
@@ -66,18 +66,6 @@ class Token:
         return f"{self.name} ({self.symbol})"
 
 
-def get_token(token_addr: ChecksumAddress) -> Token:
-    if isinstance(token_addr, str):
-        token_addr = Web3.toChecksumAddress(token_addr)
-
-    contract = get_erc20_contract(get_w3(), token_addr)
-    name = contract.functions.name().call()
-    symbol = contract.functions.symbol().call()
-    decimals = contract.functions.decimals().call()
-
-    return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
-
-
 @dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class Block:
@@ -89,15 +77,6 @@ class Block:
     )
     number: int
     timestamp: datetime
-
-
-def get_block(block_number: int) -> Block:
-    block_data = get_w3().eth.get_block(block_number)
-
-    return Block(
-        number=block_number,
-        timestamp=datetime.fromtimestamp(block_data['timestamp'])
-    )
 
 
 @dataclass(unsafe_hash=True)
@@ -124,27 +103,16 @@ class Tx:
     gas_price: int
 
 
-
-def get_tx(tx_hash: HexBytes) -> Tx:
-    tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
-
-    return Tx(
-        hash=tx_hash.hex(),
-        block=get_block(tx_data['blockNumber']),
-        transaction_index=tx_data['transactionIndex'],
-        gas_price=tx_data['gasPrice']
-    )
-
-
 @dataclass(unsafe_hash=True)
 @mapper_registry.mapped
 class DexTradePair:
     __table__ = Table(
         "dex_trade_pair",
         mapper_registry.metadata,
-        Column("id", BigInteger(), unique=True, autoincrement=True),
-        Column("token_address", String(), ForeignKey("token.address"), primary_key=True),
-        Column("dex_name", String(), ForeignKey("dex.dex_name"), primary_key=True),
+        Column("id", BigInteger(), Sequence('dex_trade_pair_id'), unique=True),
+        Column("pair_addr", String(), primary_key=True),
+        Column("token_address", String(), ForeignKey("token.address")),
+        Column("dex_name", String(), ForeignKey("dex.dex_name")),
         Column("creator_tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
         Column("is_token0_wbnb", Boolean(), nullable=False)
     )
@@ -157,11 +125,11 @@ class DexTradePair:
         }
     }
 
+    pair_addr: str
     dex: DecentralizedExchange
     token: Token
     creator_tx: Tx
     is_token0_wbnb: bool
-
 
 
 @dataclass(unsafe_hash=True)
@@ -170,10 +138,10 @@ class DexTrade:
     __table__ = Table(
         "dex_trade",
         mapper_registry.metadata,
-        Column("id", BigInteger(), unique=True, autoincrement=True),
+        Column("id", BigInteger(), Sequence('dex_trade_id'), primary_key=True),
         Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
-        Column("tx_hash", String(), ForeignKey("tx.hash"), primary_key=True),
-        Column("log_index", Integer(), primary_key=True),
+        Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
+        Column("log_index", Integer(), nullable=False),
         Column("token_in", Numeric(precision=78, scale=0), nullable=False),
         Column("token_out", Numeric(precision=78, scale=0), nullable=False),
         Column("wbnb_in", Numeric(precision=78, scale=0), nullable=False),
@@ -194,26 +162,3 @@ class DexTrade:
     token_out: int
     wbnb_in: int
     wbnb_out: int
-
-
-def get_DexTrade(swap_info, dex_pair: DexTradePair) -> DexTrade:
-    if dex_pair.is_token0_wbnb:
-        token_in = swap_info.args['amount1In']
-        token_out = swap_info.args['amount1Out']
-        wbnb_in = swap_info.args['amount0In']
-        wbnb_out = swap_info.args['amount0Out']
-    else:
-        token_in = swap_info.args['amount0In']
-        token_out = swap_info.args['amount0Out']
-        wbnb_in = swap_info.args['amount1In']
-        wbnb_out = swap_info.args['amount1Out']
-
-    return DexTrade(
-        dex_pair=dex_pair,
-        tx=get_tx(swap_info.transactionHash),
-        log_index=swap_info.logIndex,
-        token_in=token_in,
-        token_out=token_out,
-        wbnb_in=wbnb_in,
-        wbnb_out=wbnb_out
-    )
