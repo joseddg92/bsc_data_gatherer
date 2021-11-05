@@ -4,13 +4,11 @@ from enum import Enum
 from typing import Optional
 
 from eth_typing import ChecksumAddress
-from hexbytes import HexBytes
 from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric, Sequence
 from web3 import Web3
 from web3.contract import Contract
-from web3.types import TxData
 
-from web3_utils import get_erc20_contract, get_w3, get_lptoken_contract
+from web3_utils import get_w3, get_lptoken_contract
 
 from sqlalchemy.orm import registry, relationship
 
@@ -31,6 +29,9 @@ class DecentralizedExchangeType:
     dex_name: str
     router_addr: ChecksumAddress
     factory_addr: ChecksumAddress
+
+    def __str__(self):
+        return self.dex_name
 
 
 class DecentralizedExchange(Enum):
@@ -80,6 +81,9 @@ class Block:
     number: int
     timestamp: datetime
 
+    def __str__(self):
+        return f"Block {self.number}"
+
 
 @dataclass(unsafe_hash=True)
 @mapper_registry.mapped
@@ -103,6 +107,9 @@ class Tx:
     block: Block
     transaction_index: int
     gas_price: int
+
+    def __str__(self):
+        return f"tx{self.hash[:4]}...{self.hash[-4:]}"
 
 
 @dataclass(unsafe_hash=True)
@@ -144,6 +151,9 @@ class DexTradePair:
             self.__pair_contract = get_lptoken_contract(get_w3(), self.get_pair_addr())
         return self.__pair_contract
 
+    def __str__(self):
+        return f"Pair for {self.token} ({self.dex})"
+
 
 
 @dataclass(unsafe_hash=True)
@@ -176,3 +186,6 @@ class DexTrade:
     token_out: int
     wbnb_in: int
     wbnb_out: int
+
+    def __str__(self):
+        return f"trade for {self.dex_pair}"
