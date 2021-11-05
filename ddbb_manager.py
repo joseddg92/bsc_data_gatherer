@@ -14,7 +14,7 @@ class DDBBManager:
     def __init__(self, ddbb_string: str, prune_schema=False):
         self.ddbb_string = ddbb_string
         self.__engine = self.__create_ddbb_engine(ddbb_string, prune_schema=prune_schema)
-        self.__session: Session = sessionmaker(bind=self.__engine, autocommit=True)()
+        self.__session: Session = sessionmaker(bind=self.__engine)()
 
         if not self.__engine:
             raise ValueError("could not create DDBB engine")
@@ -35,6 +35,12 @@ class DDBBManager:
 
     def get_entity_by_pl(self, cls, primary_key_value):
         return self.__session.query(cls).get(primary_key_value)
+
+    def commit_changes(self):
+        try:
+            self.__session.commit()
+        except SQLAlchemyError:
+            DDBBManager.logger.exception(f"Commiting changes")
 
     def persist(self, entity) -> None:
         try:
