@@ -1,6 +1,9 @@
+import concurrent
 import itertools
 import os
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List
 
 from web3 import Web3
@@ -13,6 +16,7 @@ from web3_utils import get_w3, get_contract, get_lptoken_contract
 
 BLOCK_FOR_THE_FIRST_LP = 6810423
 BLOCK_LENGTH = 5000
+N_WORKERS = 4
 
 def get_new_pairs(
         dex_factories: Dict[DecentralizedExchangeType, Contract],
@@ -61,6 +65,7 @@ def find_and_persist_trades(
             for swap in swaps:
                 ddbb_manager.persist(e_factory.get_DexTrade(swap, pair))
 
+            print(f"{threading.get_ident()} got {len(swaps)} swaps for pair {pair}")
             return len(swaps)
         except (Exception,) as e:
             if retry > 1:
@@ -94,14 +99,13 @@ def main():
             pairs.extend(new_pairs)
 
         print("\tLooking for swaps...")
-        trades_found = sum(
-            find_and_persist_trades(
-                pair,
-                block,
-                e_factory,
-                db_manager
-            ) for pair in pairs
-        )
+        with ThreadPoolExecutor(max_workers=N_WORKERS) as executor:
+            trades_found = sum(
+                executor.map(
+                    lambda pair_for_worker: find_and_persist_trades(pair_for_worker, block, e_factory, db_manager),
+                    pairs
+                )
+            )
 
         seconds_so_far = time.time() - start_time
         blocks_processed = block + BLOCK_LENGTH - start_block
