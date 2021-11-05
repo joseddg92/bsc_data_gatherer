@@ -236,12 +236,12 @@ def get_nowbnb_token(token0, token1):
     return None
 
 
-def get_contract(w3, addr: Union[str, AddressLike], abi=None):
+def get_contract(w3, addr: Union[str, AddressLike], abi=None) -> Contract:
     return w3.eth.contract(address=addr, abi=abi if abi else get_contract_abi(addr))
 
 
 @lru_cache()
-def get_erc20_contract(w3, addr):
+def get_erc20_contract(w3, addr) -> Contract:
     return get_contract(w3, addr, abi=ERC20_ABI)
 
 
