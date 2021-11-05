@@ -31,7 +31,10 @@ class DDBBManager:
         return block_list[0] if block_list else None
 
     def get_all_pairs(self) -> List[DexTradePair]:
-        return self.__session.query(DexTradePair).all()
+        return self.__session \
+            .query(DexTradePair) \
+            .with_entities(DexTradePair.pair_addr) \
+            .all()
 
     def get_entity_by_pl(self, cls, primary_key_value):
         return self.__session.query(cls).get(primary_key_value)
