@@ -1,7 +1,7 @@
 import itertools
 import os
 import time
-from typing import Dict
+from typing import Dict, List
 
 from web3 import Web3
 from web3.contract import Contract
@@ -18,8 +18,8 @@ def get_new_pairs(
         dex_factories: Dict[DecentralizedExchangeType, Contract],
         start_block: int,
         e_factory: EntityFactory
-) -> Dict[DexTradePair, Contract]:
-    new_pairs = {}
+) -> List[DexTradePair]:
+    new_pairs = []
     for dex, factory_contract in dex_factories.items():
         for retry in itertools.count():
             try:
@@ -34,8 +34,7 @@ def get_new_pairs(
                     if not pair:
                         continue
 
-                    pair_contract = get_contract(get_w3(), pair_created.args['pair'])
-                    new_pairs[pair] = pair_contract
+                    new_pairs.append(pair)
                 break
             except (Exception,) as e:
                 if retry > 1:
@@ -45,14 +44,13 @@ def get_new_pairs(
 
 def find_and_persist_trades(
         pair: DexTradePair,
-        pair_contract: Contract,
         start_block: int,
         e_factory: EntityFactory,
         ddbb_manager: DDBBManager
 ) -> int:
     for retry in itertools.count():
         try:
-            swaps_filter = pair_contract.events.Swap.createFilter(
+            swaps_filter = pair.pair_contract().events.Swap.createFilter(
                 fromBlock=start_block - 1,
                 toBlock=start_block + BLOCK_LENGTH - 1
             )
@@ -80,13 +78,10 @@ def main():
         dex.value: get_contract(w3, dex.value.factory_addr) for dex in DecentralizedExchange
     }
     print("Reading pairs...")
-    pairs = {
-        pair: get_lptoken_contract(w3, Web3.toChecksumAddress(pair.pair_addr))
-        for pair in db_manager.get_all_pairs()
-    }
+    pairs = db_manager.get_all_pairs()
     print("Done!")
-    start_time = time.time()
 
+    start_time = time.time()
     print(f"Starting in block {start_block}, {len(pairs)} pairs so far.")
 
     block = start_block
@@ -96,17 +91,16 @@ def main():
         new_pairs = get_new_pairs(dex_factories, block, e_factory)
         if len(new_pairs) > 0:
             print(f"\tGot {len(new_pairs)} new pairs")
-            pairs.update(new_pairs)
+            pairs.extend(new_pairs)
 
         print("\tLooking for swaps...")
         trades_found = sum(
             find_and_persist_trades(
                 pair,
-                pair_contract,
                 block,
                 e_factory,
                 db_manager
-            ) for pair, pair_contract in pairs.items()
+            ) for pair in pairs
         )
 
         seconds_so_far = time.time() - start_time

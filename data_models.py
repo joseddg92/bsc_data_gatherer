@@ -1,14 +1,16 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
 from sqlalchemy import Column, Table, String, Integer, BigInteger, DateTime, ForeignKey, Boolean, Numeric, Sequence
 from web3 import Web3
+from web3.contract import Contract
 from web3.types import TxData
 
-from web3_utils import get_erc20_contract, get_w3
+from web3_utils import get_erc20_contract, get_w3, get_lptoken_contract
 
 from sqlalchemy.orm import registry, relationship
 
@@ -130,6 +132,18 @@ class DexTradePair:
     token: Token
     creator_tx: Tx
     is_token0_wbnb: bool
+
+    __pair_contract: Optional[Contract] = field(default=None, init=False, repr=False, hash=False, compare=False)
+
+
+    def get_pair_addr(self) -> ChecksumAddress:
+        return Web3.toChecksumAddress(self.pair_addr)
+
+    def pair_contract(self) -> Contract:
+        if not self.__pair_contract:
+            self.__pair_contract = get_lptoken_contract(get_w3(), self.get_pair_addr())
+        return self.__pair_contract
+
 
 
 @dataclass(unsafe_hash=True)
