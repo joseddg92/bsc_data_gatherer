@@ -2,7 +2,6 @@ from datetime import datetime
 
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes
-from parsimonious.expressions import Optional
 from web3 import Web3
 from web3.types import TxData, TxReceipt
 
@@ -64,13 +63,13 @@ class EntityFactory:
         )
 
     def get_DexTradePair(self, dex, pair_created, none_on_not_wbnb_pair=True) -> DexTradePair:
+        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
+            return None
+
         if self.dbm:
             entity = self.dbm.get_entity_by_pl(DexTradePair, pair_created.args.pair)
             if entity:
                 return entity
-
-        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
-            return None
 
         is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
         token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
