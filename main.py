@@ -167,7 +167,7 @@ def main():
 
     block = start_block
     while True:
-        logger.info(f"Import blocks {block}-{block + BLOCK_LENGTH}...")
+        logger.info(f"Importing blocks {block}-{block + BLOCK_LENGTH}...")
 
         new_pairs = get_new_pairs(dex_factories, block, e_factory)
         if len(new_pairs) > 0:
@@ -176,7 +176,7 @@ def main():
             for pair in new_pairs:
                 db_manager.persist(pair)
 
-        logger.info("\tLooking for swaps...")
+        logger.info("\tLooking for trades...")
         with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
             trades_found = sum(
                 executor.map(
@@ -184,6 +184,7 @@ def main():
                     enumerate(pairs)
                 )
             )
+        logger.info(f"\tGot {trades_found} new trades")
 
         first_block = BLOCK_FOR_THE_FIRST_LP
         last_block = get_w3().eth.get_block_number()
@@ -194,20 +195,21 @@ def main():
         remaining_seconds = remaining_blocks / blocks_per_second
         progress_percent = 100 * (block - first_block) / (last_block - first_block)
 
-        logger.info(
-            f"Processed blocks {block}-{block + BLOCK_LENGTH} {progress_percent:.2f}% "
-            f"({blocks_per_second:.2f} block/second, {remaining_seconds / 3600:.2f} hours remaining)")
-        logger.info(f"\tTotal pairs: {len(pairs)}")
-        logger.info(f"\tNew swaps: {trades_found}")
-        logger.info(f"")
-        block += BLOCK_LENGTH
-
         try:
             start_persist_time = time.time()
             db_manager.commit_changes()
-            logger.info(f"New entities commited in {time.time() - start_persist_time} seconds!")
+            logger.info(f"\tNew entities commited in {time.time() - start_persist_time:.2f} seconds!")
         except (Exception,):
             logger.exception(f"Error committing")
+
+        logger.info(
+            "\n"
+            f"Progress update: {progress_percent:.2f}% "
+            f"({blocks_per_second:.2f} block/second, {remaining_seconds / 3600:.2f} hours remaining)"
+            "\n\n"
+        )
+
+        block += BLOCK_LENGTH
 
 
 if __name__ == '__main__':
