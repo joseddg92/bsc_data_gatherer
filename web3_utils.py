@@ -44,7 +44,7 @@ TESTNET_PANCAKE_SWAP_FACTORY = "0xB7926C0430Afb07AA7DEfDE6DA862aE0Bde767bc"
 
 MAX_APPROVAL_INT = int(f"0x{64 * 'f'}", 16)
 
-logger = logging.getLogger("my_app")
+logger = logging.getLogger(__name__)
 
 # Sorted from best to worst.
 WEB3_PROVIDERS = [
