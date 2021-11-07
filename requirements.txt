@@ -37,5 +37,5 @@ websockets
 yarl==1.7.0
 
 SQLAlchemy~=1.4.26
-psycopg2~=2.9.1
+psycopg2-binary
 dataclasses
