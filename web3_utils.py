@@ -48,29 +48,54 @@ logger = logging.getLogger("my_app")
 
 # Sorted from best to worst.
 WEB3_PROVIDERS = [
-    Web3.HTTPProvider("https://bsc-dataseed.binance.org/")
+    Web3.HTTPProvider("https://bsc-dataseed.binance.org/"),
+    Web3.HTTPProvider("https://bsc-dataseed1.defibit.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed1.ninicoin.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed2.defibit.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed3.defibit.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed4.defibit.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed2.ninicoin.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed3.ninicoin.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed4.ninicoin.io/"),
+    Web3.HTTPProvider("https://bsc-dataseed1.binance.org/"),
+    Web3.HTTPProvider("https://bsc-dataseed2.binance.org/"),
+    Web3.HTTPProvider("https://bsc-dataseed3.binance.org/"),
+    Web3.HTTPProvider("https://bsc-dataseed4.binance.org/"),
 ]
 
 WEB3_TESTNET_PROVIDERS = [
     Web3.HTTPProvider("https://data-seed-prebsc-2-s1.binance.org:8545/")
 ]
 
+__providers_used = {
+    False: {provider: (0, index) for index, provider, in enumerate(WEB3_PROVIDERS)}, # For mainnet
+    True: {provider: (0, index) for index, provider in enumerate(WEB3_TESTNET_PROVIDERS)}, # For testnet
+}
+__provider_lock = threading.Lock()
+MAX_RETRIES = 5 * sum(len(candidates) for candidates in __providers_used.values())
 
 @lru_cache(maxsize=None)
 def _create_best_provider(thread: threading.Thread, testnet=False) -> Web3:
-    logger.debug(f"Creating WEB3 instance for {thread}")
-    for provider in (WEB3_TESTNET_PROVIDERS if testnet else WEB3_PROVIDERS):
-        try:
-            web3 = Web3(provider)
-            web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-            if web3.isConnected():
-                return web3
-            else:
-                logger.warning(f"Skipping {provider}: node is not connected")
-        except (Exception,) as e:
-            logger.warning(f"Skipping {provider}: {e}")
+    with __provider_lock:
+        logger.debug(f"Creating WEB3 instance for {thread}")
 
-    raise ValueError("No provider available!")
+        for retries in range(MAX_RETRIES):
+            best_provider = min(__providers_used[testnet], key=__providers_used[testnet].get)
+            try:
+                web3 = Web3(best_provider)
+                web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+                if not web3.isConnected():
+                    raise ValueError("Not connected!")
+
+                logger.debug(f"{threading.current_thread().name} got provider: {best_provider}")
+                return web3
+            except (Exception,) as e:
+                logger.warning(f"Skipping {best_provider}: {e}")
+            finally:
+                n_used, priority = __providers_used[testnet][best_provider]
+                __providers_used[testnet][best_provider] = n_used + 1, priority
+
+        raise ValueError(f"No provider available after {MAX_RETRIES} tries!")
 
 
 def get_w3(testnet=False) -> Web3:
