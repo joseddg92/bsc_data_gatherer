@@ -166,10 +166,8 @@ class DexTrade:
         Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
         Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
         Column("log_index", Integer(), nullable=False),
-        Column("token_in", Numeric(precision=78, scale=0), nullable=False),
-        Column("token_out", Numeric(precision=78, scale=0), nullable=False),
-        Column("wbnb_in", Numeric(precision=78, scale=0), nullable=False),
-        Column("wbnb_out", Numeric(precision=78, scale=0), nullable=False),
+        Column("token_delta", Numeric(precision=78, scale=0), nullable=False),
+        Column("wbnb_delta", Numeric(precision=78, scale=0), nullable=False),
     )
 
     __mapper_args__ = {  # type: ignore
@@ -182,10 +180,8 @@ class DexTrade:
     dex_pair: DexTradePair
     tx: Tx
     log_index: int
-    token_in: int
-    token_out: int
-    wbnb_in: int
-    wbnb_out: int
+    token_delta: int
+    wbnb_delta: int
 
     def __str__(self):
         return f"trade for {self.dex_pair}"

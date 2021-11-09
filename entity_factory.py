@@ -101,8 +101,6 @@ class EntityFactory:
             dex_pair=dex_pair,
             tx=self.get_tx(swap_info.transactionHash),
             log_index=swap_info.logIndex,
-            token_in=token_in,
-            token_out=token_out,
-            wbnb_in=wbnb_in,
-            wbnb_out=wbnb_out
+            token_delta=token_in - token_out,
+            wbnb_delta=wbnb_in - wbnb_out
         )
