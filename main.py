@@ -12,11 +12,11 @@ from web3.contract import Contract
 from data_models import DecentralizedExchange, DecentralizedExchangeType, DexTradePair
 from ddbb_manager import DDBBManager
 from entity_factory import EntityFactory
-from web3_utils import get_w3, get_contract
+from web3_utils import get_w3, get_contract, WEB3_PROVIDERS
 
 BLOCK_FOR_THE_FIRST_LP = 6810423
 BLOCK_LENGTH = 1000
-MAX_THREADS = 4
+MAX_THREADS = len(WEB3_PROVIDERS)
 
 LOG_FORMAT_STR = '%(asctime)s - %(levelname)s - %(message)s'
 LOG_FORMAT = logging.Formatter(LOG_FORMAT_STR)
@@ -38,7 +38,7 @@ MAX_FNF_RETRIES_FOR_WARNING = 50
 FNF_ERROR_WAIT_SECONDS = 10
 
 FORBIDEN_ERROR_MSG = "403 Client Error: Forbidden for url"
-FORBIDDEN_ERROR_WAIT_SECONDS = 60
+FORBIDDEN_ERROR_WAIT_SECONDS = 5 * 60
 
 # The rate limit of BSC endpoint on Testnet and Mainnet is 10K/5min (https://docs.binance.org/smart-chain/developer/rpc.html#rate-limit)
 RATE_LIMIT_WAIT_TIME = 10 / (10000 / (5*60))
@@ -74,6 +74,7 @@ def __handle_exception_from_w3_provider(retry: int, e: Exception):
     if retry == 0:
         error_text = str(e)
         if FORBIDEN_ERROR_MSG in error_text:
+            logger.warning("Got forbidden, 403, waiting...")
             time.sleep(FORBIDDEN_ERROR_WAIT_SECONDS)
     else:
         logger.exception(f"ERROR (retry #{retry})")
