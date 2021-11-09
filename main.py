@@ -93,17 +93,9 @@ def get_new_pairs(
 
                     new_pairs.extend(executor.map(__process_pair, pair_logs))
                 break
-            except ValueError as e:
-                if str(e) == FILTER_NOT_FOUND_ERR_MSG:
-                    if retry > MAX_FNF_RETRIES_FOR_WARNING:
-                        logger.exception(f"ERROR (retry #{retry})")
-                    time.sleep(FNF_ERROR_WAIT_SECONDS)
-                    continue
-            except (Exception,):
+            except (Exception,) as e:
                 if retry > 1:
                     logger.exception(f"ERROR (retry #{retry})")
-            finally:
-                time.sleep(RATE_LIMIT_WAIT_TIME)
 
     return list(filter(None, new_pairs))
 
@@ -128,21 +120,13 @@ def find_and_persist_trades(
 
             logger.debug(f"{threading.current_thread().name} ({index}/{total_pairs}) got {len(swaps)} swaps for {pair}")
             return len(swaps)
-        except ValueError as e:
-            if str(e) == FILTER_NOT_FOUND_ERR_MSG:
-                if retry > MAX_FNF_RETRIES_FOR_WARNING:
-                    logger.exception(f"ERROR (retry #{retry})")
-                time.sleep(FNF_ERROR_WAIT_SECONDS)
-                continue
-        except (Exception,):
+        except (Exception,) as e:
             if retry > 1:
                 logger.exception(f"ERROR (retry #{retry})")
-        finally:
-            time.sleep(RATE_LIMIT_WAIT_TIME)
 
 
 def main():
-    db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=False)
+    db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=True)
     e_factory = EntityFactory(db_manager)
     w3 = get_w3()
 
