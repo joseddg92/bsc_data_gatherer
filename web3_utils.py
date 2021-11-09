@@ -51,8 +51,6 @@ WEB3_PROVIDERS = [
     Web3.HTTPProvider("https://bsc-dataseed.binance.org/"),
     Web3.HTTPProvider("https://bsc-dataseed1.defibit.io/"),
     Web3.HTTPProvider("https://bsc-dataseed1.ninicoin.io/"),
-    Web3.HTTPProvider("https://bsc.mytokenpocket.vip"),
-    # Web3.HTTPProvider("http://binance.ankr.com:8545"),
     # Web3.HTTPProvider("https://bsc-dataseed2.defibit.io/"),
     # Web3.HTTPProvider("https://bsc-dataseed3.defibit.io/"),
     # Web3.HTTPProvider("https://bsc-dataseed4.defibit.io/"),
