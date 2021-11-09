@@ -45,6 +45,9 @@ class EntityFactory:
         )
 
     def get_tx(self, tx_hash: str) -> Tx:
+        if not tx_hash:
+            raise ValueError("tx_hash cannot be None")
+
         if isinstance(tx_hash, HexBytes):
             tx_hash = tx_hash.hex()
 
