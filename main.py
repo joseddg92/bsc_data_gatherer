@@ -139,7 +139,7 @@ def main():
 
     faulthandler.enable()
 
-    db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=True)
+    db_manager = DDBBManager(os.getenv("DDBB_STRING"))
     e_factory = EntityFactory(db_manager)
     w3 = get_w3()
 
