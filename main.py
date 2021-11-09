@@ -126,6 +126,10 @@ def find_and_persist_trades(
 
 
 def main():
+    import faulthandler
+
+    faulthandler.enable()
+    
     db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=True)
     e_factory = EntityFactory(db_manager)
     w3 = get_w3()
@@ -181,7 +185,6 @@ def main():
             logger.exception(f"Error committing")
 
         logger.info(
-            "\n"
             f"Progress update: {progress_percent:.2f}% "
             f"({blocks_per_second:.2f} block/second, {remaining_seconds / 3600:.2f} hours remaining)"
             "\n\n"
