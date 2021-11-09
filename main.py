@@ -78,7 +78,7 @@ def get_new_pairs(
         for retry in itertools.count():
             try:
                 logger.info(f"\tGetting pairs for {dex.dex_name}...")
-                new_pairs_filter = factory_contract.events.PairCreated.createFilter(
+                pair_logs = factory_contract.events.PairCreated.getLogs(
                     fromBlock=start_block - 1,
                     toBlock=start_block + BLOCK_LENGTH - 1
                 )
@@ -91,10 +91,7 @@ def get_new_pairs(
 
                         return pair
 
-                    new_pairs.extend(executor.map(
-                        __process_pair,
-                        [pair for pair in new_pairs_filter.get_all_entries()]
-                    ))
+                    new_pairs.extend(executor.map(__process_pair, pair_logs))
                 break
             except ValueError as e:
                 if str(e) == FILTER_NOT_FOUND_ERR_MSG:
@@ -121,14 +118,11 @@ def find_and_persist_trades(
     index, pair = indexed_pair
     for retry in itertools.count():
         try:
-            swaps_filter = pair.pair_contract().events.Swap.createFilter(
+            swaps = pair.pair_contract().events.Swap.getLogs(
                 fromBlock=start_block - 1,
                 toBlock=start_block + BLOCK_LENGTH - 1
             )
 
-            # Iterate through .get_all_entries() fast, otherwise the Web3 provider will forget about our
-            # filter id, and we won't be able to finish to iterate the swap entries (exception will be raisen)
-            swaps = [swap for swap in swaps_filter.get_all_entries()]
             for swap in swaps:
                 ddbb_manager.persist(e_factory.get_DexTrade(swap, pair))
 
