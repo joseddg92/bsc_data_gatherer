@@ -37,6 +37,9 @@ FILTER_NOT_FOUND_ERR_MSG = '{\'code\': -32000, \'message\': \'filter not found\'
 MAX_FNF_RETRIES_FOR_WARNING = 50
 FNF_ERROR_WAIT_SECONDS = 10
 
+FORBIDEN_ERROR_MSG = "403 Client Error: Forbidden for url"
+FORBIDDEN_ERROR_WAIT_SECONDS = 60
+
 # The rate limit of BSC endpoint on Testnet and Mainnet is 10K/5min (https://docs.binance.org/smart-chain/developer/rpc.html#rate-limit)
 RATE_LIMIT_WAIT_TIME = 10 / (10000 / (5*60))
 
@@ -67,6 +70,13 @@ def setup_loggers():
         this_logger.addHandler(stdout_handler)
         this_logger.setLevel(log_level)
 
+def __handle_exception_from_w3_provider(retry: int, e: Exception):
+    if retry == 0:
+        error_text = str(e)
+        if FORBIDEN_ERROR_MSG in error_text:
+            time.sleep(FORBIDDEN_ERROR_WAIT_SECONDS)
+    else:
+        logger.exception(f"ERROR (retry #{retry})")
 
 def get_new_pairs(
         dex_factories: Dict[DecentralizedExchangeType, Contract],
@@ -94,8 +104,7 @@ def get_new_pairs(
                     new_pairs.extend(executor.map(__process_pair, pair_logs))
                 break
             except (Exception,) as e:
-                if retry > 1:
-                    logger.exception(f"ERROR (retry #{retry})")
+                __handle_exception_from_w3_provider(retry, e)
 
     return list(filter(None, new_pairs))
 
@@ -121,15 +130,14 @@ def find_and_persist_trades(
             logger.debug(f"{threading.current_thread().name} ({index}/{total_pairs}) got {len(swaps)} swaps for {pair}")
             return len(swaps)
         except (Exception,) as e:
-            if retry > 1:
-                logger.exception(f"ERROR (retry #{retry})")
+            __handle_exception_from_w3_provider(retry, e)
 
 
 def main():
     import faulthandler
 
     faulthandler.enable()
-    
+
     db_manager = DDBBManager(os.getenv("DDBB_STRING"), prune_schema=True)
     e_factory = EntityFactory(db_manager)
     w3 = get_w3()
