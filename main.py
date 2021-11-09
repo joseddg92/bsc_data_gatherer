@@ -15,7 +15,7 @@ from entity_factory import EntityFactory
 from web3_utils import get_w3, get_contract, WEB3_PROVIDERS
 
 BLOCK_FOR_THE_FIRST_LP = 6810423
-BLOCK_LENGTH = 1000
+BLOCK_LENGTH = 5000
 MAX_THREADS = len(WEB3_PROVIDERS)
 
 LOG_FORMAT_STR = '%(asctime)s - %(levelname)s - %(message)s'
