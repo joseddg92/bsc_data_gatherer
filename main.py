@@ -16,7 +16,7 @@ from web3_utils import get_w3, get_contract, WEB3_PROVIDERS
 
 BLOCK_FOR_THE_FIRST_LP = 6810423
 BLOCK_LENGTH = 5000
-MAX_THREADS = len(WEB3_PROVIDERS)
+MAX_THREADS = int(os.getenv("THREADS", len(WEB3_PROVIDERS)))
 
 LOG_FORMAT_STR = '%(asctime)s - %(levelname)s - %(message)s'
 LOG_FORMAT = logging.Formatter(LOG_FORMAT_STR)

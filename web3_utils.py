@@ -1,6 +1,7 @@
 # Most of this taken from the Uniswap python library
 import json
 import logging
+import os
 import threading
 import random
 import time
@@ -73,9 +74,13 @@ __providers_used = {
 }
 __provider_lock = threading.Lock()
 MAX_RETRIES = 5 * sum(len(candidates) for candidates in __providers_used.values())
+IPC_PATH = os.getenv("WEB3_IPC_PATH", "")
 
 @lru_cache(maxsize=None)
 def _create_best_provider(thread: threading.Thread, testnet=False) -> Web3:
+    if IPC_PATH:
+        return Web3.IPCProvider(IPC_PATH)
+
     with __provider_lock:
         logger.debug(f"Creating WEB3 instance for {thread}")
 
