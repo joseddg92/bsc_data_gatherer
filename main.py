@@ -120,16 +120,16 @@ def find_and_persist_trades(
     index, pair = indexed_pair
     for retry in itertools.count():
         try:
-            swaps = pair.pair_contract().events.Swap.getLogs(
+            sync_logs = pair.pair_contract().events.Sync.getLogs(
                 fromBlock=start_block - 1,
                 toBlock=start_block + BLOCK_LENGTH - 1
             )
 
-            for swap in swaps:
-                ddbb_manager.persist(e_factory.get_DexTrade(swap, pair))
+            for sync in sync_logs:
+                ddbb_manager.persist(e_factory.get_DexTradeSync(sync, pair))
 
-            logger.debug(f"{threading.current_thread().name} ({index}/{total_pairs}) got {len(swaps)} swaps for {pair}")
-            return len(swaps)
+            logger.debug(f"{threading.current_thread().name} ({index}/{total_pairs}) got {len(sync_logs)} swaps for {pair}")
+            return len(sync_logs)
         except (Exception,) as e:
             __handle_exception_from_w3_provider(retry, e)
 

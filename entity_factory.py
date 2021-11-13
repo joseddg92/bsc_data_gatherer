@@ -5,7 +5,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 from web3.types import TxData, TxReceipt
 
-from data_models import Token, Block, Tx, DexTradePair, DexTrade
+from data_models import Token, Block, Tx, DexTradePair, DexTrade, DexTradeSync
 from ddbb_manager import DDBBManager
 from web3_utils import get_erc20_contract, get_w3, WBNB_ADDRESS
 
@@ -103,4 +103,13 @@ class EntityFactory:
             log_index=swap_info.logIndex,
             token_delta=token_in - token_out,
             wbnb_delta=wbnb_in - wbnb_out
+        )
+
+    def get_DexTradeSync(self, swap_info: TxReceipt, dex_pair: DexTradePair) -> DexTradeSync:
+        return DexTradeSync(
+            dex_pair=dex_pair,
+            tx=self.get_tx(swap_info.transactionHash),
+            log_index=swap_info.logIndex,
+            token_reserves=swap_info.args['reserve1'] if dex_pair.is_token0_wbnb else swap_info.args['reserve0'],
+            wbnb_reserves=swap_info.args['reserve0'] if dex_pair.is_token0_wbnb else swap_info.args['reserve1']
         )

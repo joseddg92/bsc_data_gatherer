@@ -185,3 +185,33 @@ class DexTrade:
 
     def __str__(self):
         return f"trade for {self.dex_pair}"
+
+@dataclass(unsafe_hash=True)
+@mapper_registry.mapped
+class DexTradeSync:
+    __table__ = Table(
+        "dex_trade_sync",
+        mapper_registry.metadata,
+        Column("id", BigInteger(), Sequence('dex_trade_sync_seq'), primary_key=True),
+        Column("dex_pair_id", BigInteger(), ForeignKey("dex_trade_pair.id"), nullable=False),
+        Column("tx_hash", String(), ForeignKey("tx.hash"), nullable=False),
+        Column("log_index", Integer(), nullable=False),
+        Column("token_reserves", Numeric(precision=78, scale=0), nullable=False),
+        Column("wbnb_reserves", Numeric(precision=78, scale=0), nullable=False),
+    )
+
+    __mapper_args__ = {  # type: ignore
+        "properties": {
+            "dex_pair": relationship("DexTradePair"),
+            "tx": relationship("Tx"),
+        }
+    }
+
+    dex_pair: DexTradePair
+    tx: Tx
+    log_index: int
+    token_reserves: int
+    wbnb_reserves: int
+
+    def __str__(self):
+        return f"tradesync for {self.dex_pair}"
