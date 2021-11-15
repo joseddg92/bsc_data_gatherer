@@ -71,12 +71,11 @@ def setup_loggers():
         this_logger.setLevel(log_level)
 
 def __handle_exception_from_w3_provider(retry: int, e: Exception):
-    if retry == 0:
-        error_text = str(e)
-        if FORBIDEN_ERROR_MSG in error_text:
-            logger.warning("Got forbidden, 403, waiting...")
-            time.sleep(FORBIDDEN_ERROR_WAIT_SECONDS)
-    else:
+    error_text = str(e)
+    if FORBIDEN_ERROR_MSG in error_text:
+        logger.warning("Got forbidden, 403, waiting...")
+        time.sleep(FORBIDDEN_ERROR_WAIT_SECONDS)
+    if retry > 2:
         logger.exception(f"ERROR (retry #{retry})")
 
 def get_new_pairs(
