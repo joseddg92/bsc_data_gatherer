@@ -25,7 +25,228 @@ class EntityFactory:
                 return entity
 
         contract = get_erc20_contract(get_w3(), token_addr)
-        name = contract.functions.name().call()
+        try:
+            name = contract.functions.name().call()
+        except:
+            name = ""
+
+        try:
+            symbol = contract.functions.symbol().call()
+        except:
+            symbol = ""
+
+        try:
+            decimals = contract.functions.decimals().call()
+        except:
+            decimals = 0
+
+        return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
+
+    def get_block(self, block_number: int) -> Block:
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Block, block_number)
+            if entity:
+                return entity
+
+        block_data = get_w3().eth.get_block(block_number)
+
+        return Block(
+            number=block_number,
+            timestamp=datetime.fromtimestamp(block_data['timestamp'])
+        )
+
+    def get_tx(self, tx_hash: str) -> Tx:
+        if not tx_hash:
+            raise ValueError("tx_hash cannot be None")
+
+        if isinstance(tx_hash, HexBytes):
+            tx_hash = tx_hash.hex()
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Tx, tx_hash)
+            if entity:
+                return entity
+
+        tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
+
+        return Tx(
+            hash=tx_hash,
+            block=self.get_block(tx_data['blockNumber']),
+            transaction_index=tx_data['transactionIndex'],
+            gas_price=tx_data['gasPrice']
+        )
+
+    def get_DexTradePair(self, dex, pair_created, none_on_not_wbnb_pair=True) -> DexTradePair:
+        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
+            return None
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(DexTradePair, pair_created.args.pair)
+            if entity:
+                return entity
+
+        is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
+        token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
+        symbol = contract.functions.symbol().call()
+        decimals = contract.functions.decimals().call()
+
+        return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
+
+    def get_block(self, block_number: int) -> Block:
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Block, block_number)
+            if entity:
+                return entity
+
+        block_data = get_w3().eth.get_block(block_number)
+
+        return Block(
+            number=block_number,
+            timestamp=datetime.fromtimestamp(block_data['timestamp'])
+        )
+
+    def get_tx(self, tx_hash: str) -> Tx:
+        if not tx_hash:
+            raise ValueError("tx_hash cannot be None")
+
+        if isinstance(tx_hash, HexBytes):
+            tx_hash = tx_hash.hex()
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Tx, tx_hash)
+            if entity:
+                return entity
+
+        tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
+
+        return Tx(
+            hash=tx_hash,
+            block=self.get_block(tx_data['blockNumber']),
+            transaction_index=tx_data['transactionIndex'],
+            gas_price=tx_data['gasPrice']
+        )
+
+    def get_DexTradePair(self, dex, pair_created, none_on_not_wbnb_pair=True) -> DexTradePair:
+        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
+            return None
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(DexTradePair, pair_created.args.pair)
+            if entity:
+                return entity
+
+        is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
+        token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
+        try:
+            name = contract.functions.name().call()
+        except:
+            name = ""
+
+        symbol = contract.functions.symbol().call()
+        decimals = contract.functions.decimals().call()
+
+        return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
+
+    def get_block(self, block_number: int) -> Block:
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Block, block_number)
+            if entity:
+                return entity
+
+        block_data = get_w3().eth.get_block(block_number)
+
+        return Block(
+            number=block_number,
+            timestamp=datetime.fromtimestamp(block_data['timestamp'])
+        )
+
+    def get_tx(self, tx_hash: str) -> Tx:
+        if not tx_hash:
+            raise ValueError("tx_hash cannot be None")
+
+        if isinstance(tx_hash, HexBytes):
+            tx_hash = tx_hash.hex()
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Tx, tx_hash)
+            if entity:
+                return entity
+
+        tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
+
+        return Tx(
+            hash=tx_hash,
+            block=self.get_block(tx_data['blockNumber']),
+            transaction_index=tx_data['transactionIndex'],
+            gas_price=tx_data['gasPrice']
+        )
+
+    def get_DexTradePair(self, dex, pair_created, none_on_not_wbnb_pair=True) -> DexTradePair:
+        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
+            return None
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(DexTradePair, pair_created.args.pair)
+            if entity:
+                return entity
+
+        is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
+        token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
+        try:
+            name = contract.functions.name().call()
+        except:
+            name = ""
+
+        symbol = contract.functions.symbol().call()
+        decimals = contract.functions.decimals().call()
+
+        return Token(address=token_addr, name=name, symbol=symbol, decimals=decimals)
+
+    def get_block(self, block_number: int) -> Block:
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Block, block_number)
+            if entity:
+                return entity
+
+        block_data = get_w3().eth.get_block(block_number)
+
+        return Block(
+            number=block_number,
+            timestamp=datetime.fromtimestamp(block_data['timestamp'])
+        )
+
+    def get_tx(self, tx_hash: str) -> Tx:
+        if not tx_hash:
+            raise ValueError("tx_hash cannot be None")
+
+        if isinstance(tx_hash, HexBytes):
+            tx_hash = tx_hash.hex()
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(Tx, tx_hash)
+            if entity:
+                return entity
+
+        tx_data: TxData = get_w3().eth.get_transaction(tx_hash)
+
+        return Tx(
+            hash=tx_hash,
+            block=self.get_block(tx_data['blockNumber']),
+            transaction_index=tx_data['transactionIndex'],
+            gas_price=tx_data['gasPrice']
+        )
+
+    def get_DexTradePair(self, dex, pair_created, none_on_not_wbnb_pair=True) -> DexTradePair:
+        if none_on_not_wbnb_pair and WBNB_ADDRESS not in (pair_created.args.values()):
+            return None
+
+        if self.dbm:
+            entity = self.dbm.get_entity_by_pl(DexTradePair, pair_created.args.pair)
+            if entity:
+                return entity
+
+        is_token0_wbnb = WBNB_ADDRESS == pair_created.args.token0
+        token_addr = pair_created.args.token1 if is_token0_wbnb else pair_created.args.token0
         symbol = contract.functions.symbol().call()
         decimals = contract.functions.decimals().call()
 

@@ -72,7 +72,7 @@ def setup_loggers():
 
 def __handle_exception_from_w3_provider(retry: int, e: Exception):
     error_text = str(e)
-    if FORBIDEN_ERROR_MSG in error_text:
+    if FORBIDEN_ERROR_MSG in error_text or 'too many' in error_text:
         logger.warning("Got forbidden, 403, waiting...")
         time.sleep(FORBIDDEN_ERROR_WAIT_SECONDS)
     if retry > 2:
